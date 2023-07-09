@@ -2,4 +2,3 @@
 # install with cli command: pip install -r requirements.txt
 pandas
 numpy
-tensorflow
