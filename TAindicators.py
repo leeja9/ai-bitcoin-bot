@@ -49,14 +49,10 @@ data['TR'] = data[['high-low', 'high-prev_close', 'low-prev_close']].max(axis=1)
 # Calculate DM (directional movement)
 data['up_move'] = data['high'] - data['high'].shift(-1)
 data['down_move'] = data['low'].shift(-1) - data['low']
-if data['up_move'] > data['down_move'] and data['up_move'] > 0:
-  data['pos_DM'] = data['up_move']
-else:
-  data['pos_DM'] = 0
+data['pos_DM'] = data['up_move'].where((data['up_move'] > data['down_move']) & (data['up_move'] > 0), 0)
 
-if data['down_move'] > data['up_move'] and data['down_move'] > 0:
-  data['neg_DM'] = data['down_move']
-else:
-  data['neg_DM'] = 0
+data['neg_DM'] = data['down_move'].where((data['down_move'] > data['up_move']) & (data['down_move'] > 0), 0)
+
+print(data['pos_DM'], data['neg_DM'])
 
 data.to_csv('data/binance.csv')
