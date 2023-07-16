@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 
@@ -67,6 +68,9 @@ preprocessed_data = preprocess_bitcoin_ohlc_data(
     data_file_path, output_file_path)
 print(preprocessed_data.head())
 
+
+=======
+# TODO: define filters that the environment can use to smooth raw data
 
 class BitcoinTrainingFilters:
     def __init__(self) -> None:
