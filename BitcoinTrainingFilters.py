@@ -69,7 +69,6 @@ preprocessed_data = preprocess_bitcoin_ohlc_data(
 print(preprocessed_data.head())
 
 
-=======
 # TODO: define filters that the environment can use to smooth raw data
 
 class BitcoinTrainingFilters:
