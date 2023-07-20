@@ -9,53 +9,43 @@ class Indicators:
     def __init__(self, csv_file):
         self.data = pd.read_csv(csv_file, index_col="date", parse_dates=True)
 
+        self.lookback_periods = [2, 4, 8, 16, 32, 64]
+
+        # Deprecated. Calculating all indicators in all periods listed above.
         self.roc_period = 14
         self.atr_period = 14
         self.rsi_period = 14
+        self.adx_period = 14
 
         self.check_date()
         self.calculate_all_indicators()
 
-        self.data.to_csv(csv_file)
+        # Write all calculation steps to new csv.
+        self.data.to_csv("./data/dataset_calculation_columns.csv")
+
+        # Only write results to output csv.
+        indicators = []
+        labels = ["ROC", "ADX", "RSI", "ATR"]
+        for label in labels:
+            for period in self.lookback_periods:
+                indicator = label + str(period)
+                indicators.append(indicator)
+
+        self.data[indicators].to_csv("./data/indicators.csv")
 
     def check_date(self):
         if not self.data.index.is_monotonic_increasing:
             self.data.sort_index(inplace=True)
 
     def calculate_all_indicators(self):
-        self.calculate_roc()
-        self.calculate_adx()
-        self.calculate_rsi()
-        self.calculate_atr()
+        # Calculate all indicators for all lookback periods.
+        for period in self.lookback_periods:
+            self.calculate_roc(period)
+            self.calculate_adx(period)
+            self.calculate_rsi(period)
+            self.calculate_atr(period)
 
-    def set_roc_period(self, value):
-        self.roc_period = value
-
-    def set_atr_period(self, value):
-        self.atr_period = value
-
-    def set_rsi_period(self, value):
-        self.rsi_period = value
-
-    # Get methods to return indicators.
-    # TODO: consult with team to see how these should be best implemented.
-
-    def get_roc2(self):
-        return self.data["ROC2"]
-
-    def get_roc4(self):
-        return self.data["ROC4"]
-
-    def get_roc8(self):
-        return self.data["ROC8"]
-
-    def get_roc16(self):
-        return self.data["ROC16"]
-
-    def get_roc32(self):
-        return self.data["ROC32"]
-
-    def calculate_roc(self):
+    def calculate_roc(self, period):
         """
         ROC (Rate of Change) - Velocity Measure
         Simple percentage difference between current price and some previous
@@ -64,32 +54,27 @@ class Indicators:
         """
         # Smooth data with triple exponential moving average (TEMA)
         # TEMA = 3(ema1) - 3(ema2) + ema3
-        self.data["ema1"] = (
-            self.data["close"].ewm(span=self.roc_period, adjust=False).mean()
-        )
-        self.data["ema2"] = (
-            self.data["ema1"].ewm(span=self.roc_period, adjust=False).mean()
-        )
-        self.data["ema3"] = (
-            self.data["ema2"].ewm(span=self.roc_period, adjust=False).mean()
-        )
+        self.data["ema1"] = self.data["close"].ewm(
+            span=period, adjust=False).mean()
+        self.data["ema2"] = self.data["ema1"].ewm(
+            span=period, adjust=False).mean()
+        self.data["ema3"] = self.data["ema2"].ewm(
+            span=period, adjust=False).mean()
         self.data["tema"] = (
             (3 * self.data["ema1"]) -
             (3 * self.data["ema2"]) + self.data["ema3"]
         )
 
         # ROC = current_price - previous_price / previous_price
-        self.data["ROC2"] = self.data["tema"].pct_change(periods=-2) * 100
-        self.data["ROC4"] = self.data["tema"].pct_change(periods=-4) * 100
-        self.data["ROC8"] = self.data["tema"].pct_change(periods=-8) * 100
-        self.data["ROC16"] = self.data["tema"].pct_change(periods=-16) * 100
-        self.data["ROC32"] = self.data["tema"].pct_change(periods=-32) * 100
+        self.data[f"ROC{period}"] = (
+            self.data["tema"].pct_change(periods=-(period)) * 100
+        )
 
-    def calculate_adx(self):
+    def calculate_adx(self, period):
         """
         ADX (Average Directional Index) - Acceleration Measure
         The smoothed average of DX (directional index).
-        DX = 100 * abs(+DI - -DI / +DI + -DI)
+        DX = 100 * abs(pos_DI - neg_DI / pos_DI + neg_DI)
         DI = 100 * smoothed(DM) / smoothed(TR), DM can be +DM or -DM
         TR =
         To calculate DM, first calculate UpMove and DownMove
@@ -111,6 +96,7 @@ class Indicators:
         self.data["TR"] = self.data[
             ["high-low", "high-prev_close", "low-prev_close"]
         ].max(axis=1)
+        self.data["smooth_TR"] = self.data["TR"].rolling(window=period).mean()
 
         # Calculate DM (directional movement)
         self.data["up_move"] = self.data["high"] - self.data["high"].shift(-1)
@@ -128,7 +114,31 @@ class Indicators:
             0,
         )
 
-    def calculate_rsi(self):
+        # Calculate DI (directional index) positive and negative
+        self.data["smooth_pos_DM"] = self.data["pos_DM"].rolling(
+            window=period).mean()
+        self.data["pos_DI"] = 100 * (
+            self.data["smooth_pos_DM"] / self.data["smooth_TR"]
+        )
+
+        self.data["smooth_neg_DM"] = self.data["neg_DM"].rolling(
+            window=period).mean()
+        self.data["neg_DI"] = 100 * (
+            self.data["smooth_neg_DM"] / self.data["smooth_TR"]
+        )
+
+        # Calculate DX (directional index)
+        self.data["DX"] = 100 * abs(
+            self.data["pos_DI"]
+            - self.data["neg_DI"] / self.data["pos_DI"]
+            + self.data["neg_DI"]
+        )
+
+        # ADX
+        self.data[f"ADX_{period}"] = self.data["DX"].rolling(
+            window=period).mean()
+
+    def calculate_rsi(self, period):
         """
         RSI (Relative Strength Index) - Acceleration and Climax Measure
         Compares the strength of price increases versus the strength of price
@@ -149,25 +159,23 @@ class Indicators:
                 self.data["price change"]), 0
         )
 
-        # Average the gains and losses across 14 days.
+        # Average the gains and losses across lookback period.
         self.rsi_period = 14
-        self.data["average gain"] = (
-            self.data["gain"].rolling(window=self.rsi_period).mean()
-        )
-        self.data["average loss"] = (
-            self.data["loss"].rolling(window=self.rsi_period).mean()
-        )
+        self.data["average gain"] = self.data["gain"].rolling(
+            window=period).mean()
+        self.data["average loss"] = self.data["loss"].rolling(
+            window=period).mean()
 
         # Relative strength
         self.data["RS"] = self.data["average gain"] / self.data["average loss"]
 
         # Relative Strength Index
-        self.data["RSI"] = 100 - (100 / (1 + self.data["RS"]))
+        self.data[f"RSI{period}"] = 100 - (100 / (1 + self.data["RS"]))
 
-    def calculate_atr(self):
+    def calculate_atr(self, period):
         """
         ATR (Average True Range) - Volatility Measure
         Just the 14-period average of the True Range calculation previously.
         """
-        self.data["average TR"] = self.data["TR"].rolling(
-            window=self.atr_period).mean()
+        self.data[f"ATR{period}"] = self.data["TR"].rolling(
+            window=period).mean()
