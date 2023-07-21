@@ -9,12 +9,12 @@ class Indicators:
     def __init__(self, csv_file):
         self.data = pd.read_csv(csv_file, index_col="date", parse_dates=True)
 
-        self.lookback_periods = [2, 4, 8, 16, 32, 64]
+        self.lookback_periods = [2]
 
-        # DEPRECATED. Calculating all indicators in all periods listed above.
-        self.roc_periods = 14
-        self.atr_periods = 14
-        self.rsi_periods = 14
+        # Deprecated. Calculating all indicators in all periods listed above.
+        self.roc_period = 14
+        self.atr_period = 14
+        self.rsi_period = 14
         self.adx_period = 14
 
         self.check_date()
@@ -31,7 +31,9 @@ class Indicators:
                 indicator = label + str(period)
                 indicators.append(indicator)
 
-        self.data[indicators].to_csv("./data/indicators.csv")
+        print(indicators)
+
+        # self.data[indicators].to_csv("./data/indicators.csv")
 
     def check_date(self):
         if not self.data.index.is_monotonic_increasing:
@@ -53,24 +55,20 @@ class Indicators:
         """
         # Smooth data with triple exponential moving average (TEMA)
         # TEMA = 3(ema1) - 3(ema2) + ema3
-        self.data[f"ema1_{period}"] = (
-            self.data["close"].ewm(span=period, adjust=False).mean()
-        )
-        self.data[f"ema2_{period}"] = (
-            self.data[f"ema1_{period}"].ewm(span=period, adjust=False).mean()
-        )
-        self.data[f"ema3_{period}"] = (
-            self.data[f"ema2_{period}"].ewm(span=period, adjust=False).mean()
-        )
-        self.data[f"tema_{period}"] = (
-            (3 * self.data[f"ema1_{period}"])
-            - (3 * self.data[f"ema2_{period}"])
-            + self.data[f"ema3_{period}"]
+        self.data["ema1"] = self.data["close"].ewm(
+            span=period, adjust=False).mean()
+        self.data["ema2"] = self.data["ema1"].ewm(
+            span=period, adjust=False).mean()
+        self.data["ema3"] = self.data["ema2"].ewm(
+            span=period, adjust=False).mean()
+        self.data["tema"] = (
+            (3 * self.data["ema1"]) -
+            (3 * self.data["ema2"]) + self.data["ema3"]
         )
 
         # ROC = current_price - previous_price / previous_price
         self.data[f"ROC_{period}"] = (
-            self.data[f"tema_{period}"].pct_change(periods=-(period)) * 100
+            self.data["tema"].pct_change(periods=-(period)) * 100
         )
 
     def calculate_adx_atr(self, period):
@@ -89,62 +87,52 @@ class Indicators:
         https://www.investopedia.com/terms/a/adx.asp
         https://en.wikipedia.org/wiki/Average_directional_movement_index?useskin=vector
         """
-        # Calculate TR (true range)
-        self.data["high-low"] = self.data["high"] - self.data["low"]
-        self.data["high-prev_close"] = abs(
-            self.data["high"] - self.data["close"].shift(1)
-        )
-        self.data["low-prev_close"] = abs(
-            self.data["low"] - self.data["close"].shift(1)
-        )
-        self.data[f"TR_{period}"] = self.data[
-            ["high-low", "high-prev_close", "low-prev_close"]
-        ].max(axis=1)
-        self.data[f"ATR_{period}"] = (
-            self.data[f"TR_{period}"].rolling(window=period).mean()
-        )
+        # Grab initial values from data.
+        high = self.data['high']
+        low = self.data['low']
+        prev_close = self.data['close'].shift(-1)
+        prev_high = self.data['high'].shift(-1)
+        prev_low = self.data['low'].shift(-1)
 
-        # Calculate DM (directional movement)
-        self.data["up_move"] = self.data["high"] - self.data["high"].shift(1)
-        self.data["down_move"] = self.data["low"].shift(1) - self.data["low"]
-        self.data[f"pos_DM_{period}"] = np.where(
-            (self.data["up_move"] > self.data["down_move"])
-            & (self.data["up_move"] > 0),
-            self.data["up_move"],
-            0,
-        )
-        self.data[f"neg_DM_{period}"] = np.where(
-            (self.data["down_move"] > self.data["up_move"])
-            & (self.data["down_move"] > 0),
-            self.data["down_move"],
-            0,
-        )
+        # Calculate TR and ATR
+        high-low = high - low
+        high-prev_close = high - prev_close
+        low-prev_close = low - prev_close
 
-        # Calculate DI (directional index) positive and negative
-        self.data[f"smooth_pos_DM_{period}"] = (
-            self.data[f"pos_DM_{period}"].rolling(window=period).mean()
-        )
-        self.data[f"pos_DI_{period}"] = 100 * (
-            self.data[f"smooth_pos_DM_{period}"] / self.data[f"ATR_{period}"]
-        )
+        self.data['TR'] = max(high-low, high-prev_close, low-prev_close)
+        self.data[f'ATR_{period}'] = self.data['TR'].rolling(window=period).mean()
 
-        self.data[f"smooth_neg_DM_{period}"] = (
-            self.data[f"neg_DM_{period}"].rolling(window=period).mean()
-        )
-        self.data[f"neg_DI_{period}"] = 100 * (
-            self.data[f"smooth_neg_DM_{period}"] / self.data[f"ATR_{period}"]
-        )
+        # Calculate DMs
+        up_move = high - prev_high
+        down_move = prev_low - low
 
-        # Calculate DX (directional index)
-        self.data[f"DX_{period}"] = (
-            100
-            * (abs(self.data[f"pos_DI_{period}"]) - abs(self.data[f"neg_DI_{period}"]))
-            / (abs(self.data[f"pos_DI_{period}"]) + abs(self.data[f"neg_DI_{period}"]))
-        )
+        pos_DM = 
 
-        # ADX
-        self.data[f"ADX_{period}"] = self.data[f"DX_{period}"].rolling(
-            window=period).mean()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def calculate_rsi(self, period):
         """
@@ -168,18 +156,14 @@ class Indicators:
         )
 
         # Average the gains and losses across lookback period.
-        self.data[f"average gain_{period}"] = (
-            self.data["gain"].rolling(window=period).mean()
-        )
-        self.data[f"average loss_{period}"] = (
-            self.data["loss"].rolling(window=period).mean()
-        )
+        self.rsi_period = 14
+        self.data["average gain"] = self.data["gain"].rolling(
+            window=period).mean()
+        self.data["average loss"] = self.data["loss"].rolling(
+            window=period).mean()
 
         # Relative strength
-        self.data[f"RS_{period}"] = (
-            self.data[f"average gain_{period}"] /
-            self.data[f"average loss_{period}"]
-        )
+        self.data["RS"] = self.data["average gain"] / self.data["average loss"]
 
         # Relative Strength Index
-        self.data[f"RSI_{period}"] = 100 - (100 / (1 + self.data[f"RS_{period}"]))
+        self.data[f"RSI_{period}"] = 100 - (100 / (1 + self.data["RS"]))
