@@ -62,15 +62,12 @@ def preprocess_bitcoin_ohlc_data(file_path, output_file_path):
 
 
 # Example usage:
-data_file_path = 'data\Coinbase_Pro_BTC-USD_2019-04-22_2023-04-14.csv'
-output_file_path = 'data\preprocessed_data.csv'  # Specify the output file path
-preprocessed_data = preprocess_bitcoin_ohlc_data(
-    data_file_path, output_file_path)
-print(preprocessed_data.head())
+if __name__ == '__main__':
+    data_file_path = 'data\Coinbase_Pro_BTC-USD_2019-04-22_2023-04-14.csv'
+    output_file_path = 'data\preprocessed_data.csv'  # Specify the output file path
+    preprocessed_data = preprocess_bitcoin_ohlc_data(
+        data_file_path, output_file_path)
+    print(preprocessed_data.head())
 
 
 # TODO: define filters that the environment can use to smooth raw data
-
-class BitcoinTrainingFilters:
-    def __init__(self) -> None:
-        pass
