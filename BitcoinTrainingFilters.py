@@ -67,6 +67,3 @@ if __name__ == '__main__':
     preprocessed_data = preprocess_bitcoin_ohlc_data(
         data_file_path, output_file_path)
     print(preprocessed_data.head())
-
-
-# TODO: define filters that the environment can use to smooth raw data
