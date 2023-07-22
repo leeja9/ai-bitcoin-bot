@@ -1,6 +1,5 @@
 
 import pandas as pd
-import numpy as np
 
 
 def triple_exponential_moving_average(data, span):
