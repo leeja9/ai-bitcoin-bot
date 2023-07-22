@@ -3,6 +3,8 @@
 from BitcoinTrainingFilters import BitcoinTrainingFilters
 from BitcoinTrainingStates import BitcoinTrainingStates
 
+import gymnasium as gym
+
 
 class BitcoinTrainingEnvironment:
     def __init__(self) -> None:

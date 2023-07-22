@@ -57,10 +57,10 @@ class QLearningAgent():
 
     def initialize_performance_metric(self):
         self.performance = sharpe_ratio_performance
-        self.train_buy_and_hold_performance = self.performance.get_buy_and_hold(
-            self.env_train)
-        self.eval_buy_and_hold_performance = self.performance.get_buy_and_hold(
-            self.env_eval)
+        self.train_buy_and_hold_performance = \
+            self.performance.get_buy_and_hold(self.env_train)
+        self.eval_buy_and_hold_performance = \
+            self.performance.get_buy_and_hold(self.env_eval)
 
     def initialize_model(self):
         self.model = self.get_model()
@@ -71,7 +71,10 @@ class QLearningAgent():
         episode_index = np.arange(par.number_iterations)
         columns = (('train', 'eval'),
                    self.rewards,
-                   ('average_reward', 'performance', 'average_long', 'average_short'))
+                   ('average_reward',
+                    'performance',
+                    'average_long',
+                    'average_short'))
         columns_index = pd.MultiIndex.from_product(columns)
         self.info_dataframe = pd.DataFrame(
             index=episode_index, columns=columns_index)
@@ -96,16 +99,19 @@ class QLearningAgent():
         return linalg.inv(linalg.sqrtm(covariance))
 
     def get_augmented_experiences_sample(self, batch_size):
-        experiences = deepcopy(self.replay.random_sample(batch_size, replace=True))
+        experiences = deepcopy(self.replay.random_sample(batch_size,
+                                                         replace=True))
         experiences['weights'] = self.generate_random_weights(batch_size)
-        experiences['gamma'] = self.generate_random_gammas(batch_size) if par.random_gamma \
+        experiences['gamma'] = self.generate_random_gammas(batch_size) \
+            if par.random_gamma \
             else np.tile(par.discount_factor_Q_learning, (batch_size, 1))
         return experiences
 
     def rescale_experiences_sample(self, experiences: dict):
         experiences['vector_of_rewards'] = np.dot(
             experiences['vector_of_rewards'],
-            self.replay_rewards_scaling_matrix()) / np.linalg.norm(experiences['weights'], axis=-1).reshape(-1, 1)
+            self.replay_rewards_scaling_matrix()) / np.linalg.norm(
+                experiences['weights'], axis=-1).reshape(-1, 1)
         return experiences
 
     def one_step_of_training(self):
@@ -115,7 +121,8 @@ class QLearningAgent():
         """
 
         experiences = self.rescale_experiences_sample(
-            self.get_augmented_experiences_sample(par.batch_size_replay_sampling))
+            self.get_augmented_experiences_sample(
+                par.batch_size_replay_sampling))
 
         current_qs_list = self.model([experiences['starting_observation'],
                                       experiences['starting_position'],
@@ -127,21 +134,25 @@ class QLearningAgent():
                                             experiences['weights'],
                                             experiences['gamma']]).numpy()
 
-        reward = np.sum(experiences['vector_of_rewards'] * experiences['weights'], axis=-1)
+        reward = np.sum(experiences['vector_of_rewards'] *
+                        experiences['weights'], axis=-1)
 
         max_future_q = reward \
             + np.where(~experiences['done'].squeeze(),
-                       experiences['gamma'].squeeze() * np.max(future_qs_list, axis=-1),
+                       experiences['gamma'].squeeze() *
+                       np.max(future_qs_list, axis=-1),
                        0)
 
         a = experiences['action'].squeeze()
         i = np.arange(len(a))
-        current_qs_list[i, a] = (1 - par.learning_rate_Q_learning) * current_qs_list[i, a] \
-            + par.learning_rate_Q_learning * max_future_q
+        current_qs_list[i, a] = (1 - par.learning_rate_Q_learning) * \
+            current_qs_list[i, a] + par.learning_rate_Q_learning * max_future_q
 
         self.model.fit(
-            [experiences['starting_observation'], experiences['starting_position'],
-             experiences['weights'], experiences['gamma']],
+            [experiences['starting_observation'],
+             experiences['starting_position'],
+             experiences['weights'],
+             experiences['gamma']],
             current_qs_list,
             batch_size=par.model.batch_size_for_learning,
             verbose=0,
@@ -166,18 +177,22 @@ class QLearningAgent():
                                  par.max_possible_gamma, size=(steps, 1))
 
     def get_possible_actions(self):
-        return [Actions.Hold.value, Actions.Buy.value] if par.long_positions_only else \
-               [Actions.Hold.value, Actions.Buy.value, Actions.Sell.value]
+        return [Actions.Hold.value, Actions.Buy.value] \
+            if par.long_positions_only \
+            else [Actions.Hold.value, Actions.Buy.value, Actions.Sell.value]
 
     def get_possible_positions(self):
-        return [Positions.Neutral, Positions.Long] if par.long_positions_only else \
-               [Positions.Neutral, Positions.Long, Positions.Short]
+        return [Positions.Neutral, Positions.Long] \
+            if par.long_positions_only \
+            else [Positions.Neutral, Positions.Long, Positions.Short]
 
     def sample_random_action(self, n=None):
         return np.random.choice(self.get_possible_actions(), n)
 
     def get_specific_reward_weights(self, reward, steps):
-        """Returns a weight vector where specified reward is weighted 1, others 0"""
+        """Returns a weight vector where
+        specified reward is weighted 1, others 0
+        """
         reward_weights = np.zeros((steps, self.number_of_rewards()))
         reward_weights[:, self.get_reward_index(reward)] = 1
         return reward_weights
@@ -185,20 +200,29 @@ class QLearningAgent():
     def run_agent(self, environment: EnvironmentRL, model,
                   reward=None, training=False, epsilon=0):
         """
-        Function taking currently available NN model, and computing a number of environment steps in an efficient, vectorised way
+        Function taking currently available NN model,
+        and computing a number of environment steps in an efficient,
+        vectorised way
         Inputs:
         - environment
         - model: (current state -> q-values) model
-        - training: if set to False, all steps in the full environment are carried. Otherwise, only those steps
-            in between consecutive fitting of the model. More precisely, training = True used during training,
-            training = False used during plotting
-        - reward: the reward the agent is going to maximize, to be set only when training=False
-        - epsilon: when training = True, epsilon is used in the RL greedy search
+        - training: if set to False, all steps in the full environment are
+                    carried. Otherwise, only those steps in between
+                    consecutive fitting of the model. More precisely,
+                    training = True used during training,
+                    training = False used during plotting
+        - reward: the reward the agent is going to maximize,
+                    to be set only when training=False
+        - epsilon: when training = True,
+                    epsilon is used in the RL greedy search
         """
 
         assert not (
-            training and reward), 'you cannot specify a specific reward during training'
-        assert training or reward, 'you have to specify wether it is in training mode or a specific reward'
+            training and reward), \
+            'you cannot specify a specific reward during training'
+        assert training or reward, \
+            'you have to specify wether it is in training mode or \
+                a specific reward'
 
         if not training:
             environment.reset()
@@ -209,25 +233,33 @@ class QLearningAgent():
         start = environment.get_current_tick() - par.window_size + 1
         end = min(start + n + par.window_size - 1, environment._end_tick)
 
-        price_signals = lookback_array(environment.signal_features[0][start:end].reshape(
-            -1), par.window_size).reshape((-1, par.window_size, 1))
+        price_signals = lookback_array(
+            environment.signal_features[0][start:end].reshape(-1),
+            par.window_size).reshape((-1, par.window_size, 1))
         steps = len(price_signals)
 
-        gamma = self.generate_random_gammas(steps) if training and par.random_gamma else np.tile(
+        gamma = self.generate_random_gammas(steps) \
+            if training and par.random_gamma else np.tile(
             par.discount_factor_Q_learning, (steps, 1))
         reward_weights = self.generate_random_weights(
-            steps) if training else self.get_specific_reward_weights(reward, steps)
+            steps) if training else self.get_specific_reward_weights(reward,
+                                                                     steps)
 
         get_best_action = partial(np.argmax, axis=-1)
-        best_actions = {p: get_best_action(model([price_signals, np.tile(p.value, (steps, 1)), reward_weights, gamma]))
+        best_actions = {p: get_best_action(
+                        model([price_signals,
+                               np.tile(p.value, (steps, 1)),
+                               reward_weights,
+                               gamma]))
                         for p in self.get_possible_positions()}
 
         done = False
         i = 0
         while i < n and (not done):
 
-            action = self.sample_random_action() if sample_binomial(
-                epsilon) else best_actions[environment.get_current_position()][i]
+            action = self.sample_random_action() \
+                if sample_binomial(epsilon) \
+                else best_actions[environment.get_current_position()][i]
 
             new_observation, done, old_position, rewards = environment.step(
                 action)
@@ -255,26 +287,31 @@ class QLearningAgent():
         for subset in ('train', 'eval'):
             env = self.get_env(subset)
             self.run_agent(env, reward=reward, model=self.target_model)
-            self.info_dataframe[subset, reward,
-                                'average_reward'][episode] = env.average_reward(reward)
-            self.info_dataframe[subset, reward,
-                                'performance'][episode] = self.performance.get(env)
+            self.info_dataframe[subset, reward, 'average_reward'][episode] = \
+                env.average_reward(reward)
+            self.info_dataframe[subset, reward, 'performance'][episode] = \
+                self.performance.get(env)
 
     def record_average_position(self, episode, reward):
         for subset in ('train', 'eval'):
             env = self.get_env(subset)
-            assert env.is_done(), 'environments should be done when calling this funcion'
-            self.info_dataframe[subset, reward, 'average_long'][episode] = env.position_proportion(
-                Positions.Long)
-            self.info_dataframe[subset, reward, 'average_short'][episode] = env.position_proportion(
-                Positions.Short)
+            assert env.is_done(), \
+                'environments should be done when calling this funcion'
+            self.info_dataframe[subset, reward, 'average_long'][episode] = \
+                env.position_proportion(Positions.Long)
+            self.info_dataframe[subset, reward, 'average_short'][episode] = \
+                env.position_proportion(Positions.Short)
 
     def training_summary_plot(self, reward):
         plots.training_summary_plot(self, reward)
         self.render_environment(
-            self.env_episode, 'training', reward=reward, model=self.target_model)
+            self.env_episode, 'training',
+            reward=reward,
+            model=self.target_model)
         self.render_environment(
-            self.env_eval, 'evaluation', reward=reward, model=self.target_model)
+            self.env_eval, 'evaluation',
+            reward=reward,
+            model=self.target_model)
 
     def get_env(self, subset: str):
         if subset == 'train':

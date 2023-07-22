@@ -4,7 +4,9 @@ from typing import List, Dict
 from util import load_json
 
 
-def set_max_possible_gamma(Parameters, max_possible_gamma, discount_factor_Q_learning):
+def set_max_possible_gamma(Parameters,
+                           max_possible_gamma,
+                           discount_factor_Q_learning):
     if max_possible_gamma == 'auto':
         Parameters.max_possible_gamma = discount_factor_Q_learning + \
             0.9 * (1 - discount_factor_Q_learning)
@@ -29,10 +31,11 @@ def set_frequency_target_exchange(Parameters, frequency_target_exchange):
 
 def set_epochs_for_Q_Learning_fit(Parameters):
     if Parameters.model.epochs_for_Q_Learning_fit == 'auto':
-        Parameters.model.epochs_for_Q_Learning_fit = math.ceil(
-            Parameters.TRAINING_INTENSITY
-            * (Parameters.model.batch_size_for_learning
-               / Parameters.batch_size_replay_sampling))
+        p1 = Parameters.TRAINING_INTENSITY
+        p2 = Parameters.model.batch_size_for_learning
+        p3 = Parameters.batch_size_replay_sampling
+        epochs = math.ceil(p1 * (p2 / p3))
+        Parameters.model.epochs_for_Q_Learning_fit = epochs
 
 
 class Parameters():
@@ -122,7 +125,9 @@ class Parameters():
         Parameters.long_positions_only = long_positions_only
 
         Parameters.Q_learning_iterations = Q_learning_iterations
-        Parameters.number_iterations = Parameters.start_greedy_shift + Parameters.Q_learning_iterations
+        Parameters.number_iterations = (
+            Parameters.start_greedy_shift + Parameters.Q_learning_iterations
+        )
 
         set_frequency_target_exchange(Parameters, frequency_target_exchange)
 
@@ -180,9 +185,10 @@ class DatasetParameters():
         self.start = start
         self.end = end
         self.length = length
-        
         if length and self.end:
-            raise ValueError('You should not specify a length if start and end are given')
+            raise ValueError(
+                'You should not specify a length if start and end are given'
+            )
         if length is None and isinstance(start, int) and isinstance(end, int):
             self.length = self.end - self.start
         if self.end is None and length:
@@ -202,4 +208,3 @@ class EnvironmentParameters():
     ):
         self.trade_fee_bid = trade_fee_bid
         self.trade_fee_ask = trade_fee_ask
-

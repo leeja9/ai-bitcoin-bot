@@ -74,7 +74,8 @@ class EnvironmentRL(Environment):
 
     def SR_diff(self, action, lookback=10):
         """
-        Difference between the current sharpe ratio and the one at the previous time step.
+        Difference between the current sharpe ratio and
+        the one at the previous time step.
         Both are calculated using the last <lookback> steps
         """
         returns = self.get_portfolio_log_returns()[-lookback - 1:]
@@ -135,7 +136,7 @@ class EnvironmentRL(Environment):
 
     def _calculate_reward(self, action):
         return pd.Series({name: float(f(self, action))
-                for name, f in self.rewards_dictionary.items()})
+                          for name, f in self.rewards_dictionary.items()})
 
     def _initialize_total_reward(self):
         self.total_reward = pd.Series({r: 0. for r in self.rewards})
@@ -144,6 +145,7 @@ class EnvironmentRL(Environment):
         self.total_reward += rewards
 
     def average_reward(self, reward=None):
-        """ If reward is None, then an average of reward averages is returned"""
-        averages = self.total_reward/(self._current_tick - self._start_tick)
+        """ If reward is None, then an average of reward averages is returned
+        """
+        averages = self.total_reward / (self._current_tick - self._start_tick)
         return averages[reward] if reward else np.mean(averages)

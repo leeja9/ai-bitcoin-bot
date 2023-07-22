@@ -46,9 +46,9 @@ def render(obj):
     _plot_position(obj, obj._position, obj._current_tick)
 
     plt.suptitle(
-        "Total Reward: %.6f" % obj.total_reward + ' ~ '
-        + "Total Profit: %.6f" % obj._total_profit
-    )
+        "Total Reward: %.6f" % obj.total_reward +
+        ' ~ ' +
+        "Total Profit: %.6f" % obj._total_profit)
 
     plt.pause(0.01)
     plt.savefig("LatestFigure", dpi=par.dpi_res)
@@ -111,7 +111,8 @@ def render_all(obj, subset, reward):
         plot_file = "{}/{}/plots/{}_AllProfits".format(
             obj.path, reward, subset)
         plt.savefig(plot_file, dpi=par.dpi_res)
-        d = {'buy_and_hold_t': buy_and_hold_t, 'buy_and_hold_profits': buy_and_hold_profits,
+        d = {'buy_and_hold_t': buy_and_hold_t,
+             'buy_and_hold_profits': buy_and_hold_profits,
              'obj._scaled_profits': obj._scaled_profits}
         save_pickle(f'{plot_file}.pkl', d)
     plt.close('all')
@@ -174,20 +175,28 @@ def profit_plot(obj, file: str, title: str):
 def training_summary_plot(obj, reward):
 
     d = {
-        'average_reward_train': obj.info_dataframe['train', reward, 'average_reward'].dropna(),
-        'average_reward_eval': obj.info_dataframe['eval', reward, 'average_reward'].dropna(),
-        'performance_train': obj.info_dataframe['train', reward, 'performance'].dropna(),
-        'performance_eval': obj.info_dataframe['eval', reward, 'performance'].dropna(),
+        'average_reward_train': obj.info_dataframe['train', reward,
+                                                   'average_reward'].dropna(),
+        'average_reward_eval': obj.info_dataframe['eval', reward,
+                                                  'average_reward'].dropna(),
+        'performance_train': obj.info_dataframe['train', reward,
+                                                'performance'].dropna(),
+        'performance_eval': obj.info_dataframe['eval', reward,
+                                               'performance'].dropna(),
 
         'performance_hline': obj.performance.hline,
         'performance_name': obj.performance.name,
         'train_buy_and_hold_performance': obj.train_buy_and_hold_performance,
         'eval_buy_and_hold_performance': obj.eval_buy_and_hold_performance,
 
-        'average_long_train': obj.info_dataframe['train', reward, 'average_long'].dropna(),
-        'average_long_eval': obj.info_dataframe['eval', reward, 'average_long'].dropna(),
-        'average_short_train': obj.info_dataframe['train', reward, 'average_short'].dropna(),
-        'average_short_eval': obj.info_dataframe['eval', reward, 'average_short'].dropna()
+        'average_long_train': obj.info_dataframe['train', reward,
+                                                 'average_long'].dropna(),
+        'average_long_eval': obj.info_dataframe['eval', reward,
+                                                'average_long'].dropna(),
+        'average_short_train': obj.info_dataframe['train', reward,
+                                                  'average_short'].dropna(),
+        'average_short_eval': obj.info_dataframe['eval', reward,
+                                                 'average_short'].dropna()
     }
 
     fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=(2, 4.5))
@@ -196,10 +205,16 @@ def training_summary_plot(obj, reward):
     # Rewards
     ax1.axhline(y=0.0, color='k', linestyle='dotted', alpha=0.5)
 
-    ax1.step(d['average_reward_eval'].index, d['average_reward_eval'], label="eval", color=par.color_eval,
-             linestyle=par.style_eval, marker=par.marker_eval, where='post')
-    ax1.step(d['average_reward_train'].index, d['average_reward_train'], label="train", color=par.color_train,
-             linestyle=par.style_train, marker=par.marker_train, where='post')
+    ax1.step(d['average_reward_eval'].index,
+             d['average_reward_eval'],
+             label="eval", color=par.color_eval,
+             linestyle=par.style_eval,
+             marker=par.marker_eval, where='post')
+    ax1.step(d['average_reward_train'].index, d['average_reward_train'],
+             label="train", color=par.color_train,
+             linestyle=par.style_train,
+             marker=par.marker_train,
+             where='post')
     ax1.legend(loc='best')
     ax1.ticklabel_format(axis='y', scilimits=[-2, 2])
     s = 'MULTI' if obj.has_multiple_rewards() else 'SINGLE'
@@ -211,13 +226,22 @@ def training_summary_plot(obj, reward):
     ax2.axhline(y=obj.performance.hline, color='k',
                 linestyle='dotted', alpha=0.5)
 
-    ax2.axhline(y=obj.eval_buy_and_hold_performance, color=par.color_eval, label='eval BH',
+    ax2.axhline(y=obj.eval_buy_and_hold_performance,
+                color=par.color_eval,
+                label='eval BH',
                 linestyle='--', marker=par.marker_eval_BH)
     ax2.ticklabel_format(axis='y', scilimits=[-2, 2])
-    ax2.step(d['performance_train'].index, d['performance_train'], label="train", color=par.color_train,
-             linestyle=par.style_train, marker=par.marker_train, where='post')
-    ax2.step(d['performance_eval'].index, d['performance_eval'], label="eval", color=par.color_eval,
-             linestyle=par.style_eval, marker=par.marker_eval, where='post')
+    ax2.step(d['performance_train'].index,
+             d['performance_train'],
+             label="train",
+             color=par.color_train,
+             linestyle=par.style_train,
+             marker=par.marker_train, where='post')
+    ax2.step(d['performance_eval'].index,
+             d['performance_eval'], label="eval",
+             color=par.color_eval,
+             linestyle=par.style_eval,
+             marker=par.marker_eval, where='post')
 
     ax2.legend(loc='best')
     ax2.set_title(obj.performance.name, wrap=True)
@@ -228,17 +252,36 @@ def training_summary_plot(obj, reward):
     ax3.set_ylim([-0.04, 1.04])
     ax3.axhline(y=1, color='k', linestyle='dotted', alpha=0.5)
     ax3.axhline(y=0, color='k', linestyle='dotted', alpha=0.5)
-    ax3.step(d['average_long_train'].index, d['average_long_train'], label="train AL", color=par.color_train,
+    ax3.step(d['average_long_train'].index,
+             d['average_long_train'],
+             label="train AL",
+             color=par.color_train,
              linestyle=par.style_train, marker=par.marker_train, where='post')
-    ax3.step(d['average_long_eval'].index, d['average_long_eval'], label="eval AL", color=par.color_eval,
-             linestyle=par.style_eval, marker=par.marker_eval, where='post')
+    ax3.step(d['average_long_eval'].index, d['average_long_eval'],
+             label="eval AL",
+             color=par.color_eval,
+             linestyle=par.style_eval,
+             marker=par.marker_eval,
+             where='post')
     ax3.set_title(
-        "Average Long (AL)" if par.long_positions_only else "Average Long/Short (AL/AS)")
+        "Average Long (AL)"
+        if par.long_positions_only
+        else "Average Long/Short (AL/AS)")
     if not par.long_positions_only:
-        ax3.step(d['average_short_train'].index, d['average_short_train'], label="train AS", color=par.color_train,
-                 linestyle=par.style_train_neutral, marker=par.marker_train_neutral, markersize=1, where='post')
-        ax3.step(d['average_short_eval'].index, d['average_short_eval'], label="eval AS", color=par.color_eval,
-                 linestyle=par.style_eval_neutral, marker=par.marker_eval_neutral, markersize=1, where='post')
+        ax3.step(d['average_short_train'].index,
+                 d['average_short_train'],
+                 label="train AS", color=par.color_train,
+                 linestyle=par.style_train_neutral,
+                 marker=par.marker_train_neutral,
+                 markersize=1, where='post')
+        ax3.step(d['average_short_eval'].index,
+                 d['average_short_eval'],
+                 label="eval AS",
+                 color=par.color_eval,
+                 linestyle=par.style_eval_neutral,
+                 marker=par.marker_eval_neutral,
+                 markersize=1,
+                 where='post')
     ax3.legend(loc='best')
     ax3.ticklabel_format(axis='y', scilimits=[-2, 2])
 
@@ -274,7 +317,9 @@ def plot_best_model_info(obj, reward):
         plt.plot(df[f'performance_{subset}'], label=subset, alpha=0.9, color=c,
                  linestyle=linestyles[i], marker=markers[i])
         plt.axhline(obj.performance.get_buy_and_hold(obj.get_env(subset)),
-                    linestyle=linestyles_BH[i], color=c, marker=markers[i], label=labels[i])
+                    linestyle=linestyles_BH[i],
+                    color=c, marker=markers[i],
+                    label=labels[i])
 
         d[f'performance_{subset}'] = df[f'performance_{subset}']
         d[f'bh_{subset}'] = obj.performance.get_buy_and_hold(
