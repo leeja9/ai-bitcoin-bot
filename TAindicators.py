@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 """This is an file for experimenting with producing technical indicators from the market data."""
 
@@ -44,14 +43,17 @@ If DownMove > UpMove and DownMove > 0, -DM = DownMove, else -DM = 0
 data['high-low'] = data['high'] - data['low']
 data['high-prev_close'] = abs(data['high'] - data['close'].shift(-1))
 data['low-prev_close'] = abs(data['low'] - data['close'].shift(-1))
-data['TR'] = data[['high-low', 'high-prev_close', 'low-prev_close']].max(axis=1)
+data['TR'] = data[['high-low', 'high-prev_close',
+                   'low-prev_close']].max(axis=1)
 
 # Calculate DM (directional movement)
 data['up_move'] = data['high'] - data['high'].shift(-1)
 data['down_move'] = data['low'].shift(-1) - data['low']
-data['pos_DM'] = data['up_move'].where((data['up_move'] > data['down_move']) & (data['up_move'] > 0), 0)
+data['pos_DM'] = data['up_move'].where(
+    (data['up_move'] > data['down_move']) & (data['up_move'] > 0), 0)
 
-data['neg_DM'] = data['down_move'].where((data['down_move'] > data['up_move']) & (data['down_move'] > 0), 0)
+data['neg_DM'] = data['down_move'].where(
+    (data['down_move'] > data['up_move']) & (data['down_move'] > 0), 0)
 
 print(data['pos_DM'], data['neg_DM'])
 
