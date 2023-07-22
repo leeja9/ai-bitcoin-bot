@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 # virtual environment
 .venv/
+
+# Ignore data folder
+.data
