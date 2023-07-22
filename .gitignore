@@ -401,4 +401,5 @@ FodyWeavers.xsd
 .venv/
 
 # Ignore data folder
+data
 .data
