@@ -398,7 +398,9 @@ FodyWeavers.xsd
 *.sln.iml
 
 # virtual environment
-.venv/
+.venv*/
+.env*/
+venv*/
 
 # Ignore data folder
 data
