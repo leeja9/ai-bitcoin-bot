@@ -24,7 +24,7 @@ class Indicators:
         self.data.to_csv("./data/dataset_calculation_columns.csv")
 
         # Only write results to output csv.
-        indicators = []
+        indicators = ["close", "open", "high", "low", "vol"]
         labels = ["ROC_", "RROC_", "ADX_", "RSI_", "ATR_"]
         for label in labels:
             for period in self.lookback_periods:
@@ -73,7 +73,7 @@ class Indicators:
 
         # ROC = current_price - previous_price / previous_price
         self.data[f"ROC_{period}"] = (
-            self.data[f"tema_{period}"].pct_change(periods=-(period)) * 100
+            self.data[f"roc_tema_{period}"].pct_change(periods=-(period)) * 100
         )
 
     def calculate_rroc(self, period):
@@ -84,7 +84,7 @@ class Indicators:
         # Smooth data with triple exponential moving average (TEMA)
         # TEMA = 3(ema1) - 3(ema2) + ema3
         self.data[f"rr_ema1_{period}"] = (
-            self.data[f"roc_{period}"].ewm(span=period, adjust=False).mean()
+            self.data[f"ROC_{period}"].ewm(span=period, adjust=False).mean()
         )
         self.data[f"rr_ema2_{period}"] = (
             self.data[f"rr_ema1_{period}"].ewm(
@@ -101,8 +101,8 @@ class Indicators:
         )
 
         # ROC = current_price - previous_price / previous_price
-        self.data[f"ROC_{period}"] = (
-            self.data[f"tema_{period}"].pct_change(periods=-(period)) * 100
+        self.data[f"RROC_{period}"] = (
+            self.data[f"rr_tema_{period}"].pct_change(periods=-(period)) * 100
         )
 
     def calculate_adx_atr(self, period):
