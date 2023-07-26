@@ -9,13 +9,13 @@ class Indicators:
     def __init__(self, csv_file):
         self.data = pd.read_csv(csv_file, index_col="date", parse_dates=True)
 
-        self.lookback_periods = [2, 4, 8, 16, 32, 64]
+        self.lookback_periods = [2, 4, 6, 8, 16, 32, 64]
 
         # DEPRECATED. Calculating all indicators in all periods listed above.
-        self.roc_periods = 14
-        self.atr_periods = 14
-        self.rsi_periods = 14
-        self.adx_period = 14
+        # self.roc_periods = [2, 4, 8, 16, 32, 64]
+        # self.atr_periods = [2, 4, 8, 16, 32, 64]
+        # self.rsi_periods = [2, 4, 8, 16, 32, 64]
+        # self.adx_period = [2, 4, 6, 8, 16, 32, 64]
 
         self.check_date()
         self.calculate_all_indicators()
@@ -25,7 +25,7 @@ class Indicators:
 
         # Only write results to output csv.
         indicators = []
-        labels = ["ROC_", "ADX_", "RSI_", "ATR_"]
+        labels = ["ROC_", "RROC_", "ADX_", "RSI_", "ATR_"]
         for label in labels:
             for period in self.lookback_periods:
                 indicator = label + str(period)
@@ -41,6 +41,7 @@ class Indicators:
         # Calculate all indicators for all lookback periods.
         for period in self.lookback_periods:
             self.calculate_roc(period)
+            self.calculate_rroc(period)
             self.calculate_adx_atr(period)
             self.calculate_rsi(period)
 
@@ -53,19 +54,50 @@ class Indicators:
         """
         # Smooth data with triple exponential moving average (TEMA)
         # TEMA = 3(ema1) - 3(ema2) + ema3
-        self.data[f"ema1_{period}"] = (
+        self.data[f"roc_ema1_{period}"] = (
             self.data["close"].ewm(span=period, adjust=False).mean()
         )
-        self.data[f"ema2_{period}"] = (
-            self.data[f"ema1_{period}"].ewm(span=period, adjust=False).mean()
+        self.data[f"roc_ema2_{period}"] = (
+            self.data[f"roc_ema1_{period}"].ewm(
+                span=period, adjust=False).mean()
         )
-        self.data[f"ema3_{period}"] = (
-            self.data[f"ema2_{period}"].ewm(span=period, adjust=False).mean()
+        self.data[f"roc_ema3_{period}"] = (
+            self.data[f"roc_ema2_{period}"].ewm(
+                span=period, adjust=False).mean()
         )
-        self.data[f"tema_{period}"] = (
-            (3 * self.data[f"ema1_{period}"])
-            - (3 * self.data[f"ema2_{period}"])
-            + self.data[f"ema3_{period}"]
+        self.data[f"roc_tema_{period}"] = (
+            (3 * self.data[f"roc_ema1_{period}"])
+            - (3 * self.data[f"roc_ema2_{period}"])
+            + self.data[f"roc_ema3_{period}"]
+        )
+
+        # ROC = current_price - previous_price / previous_price
+        self.data[f"ROC_{period}"] = (
+            self.data[f"tema_{period}"].pct_change(periods=-(period)) * 100
+        )
+
+    def calculate_rroc(self, period):
+        """
+        Rate of Change of ROC - Acceleration Measure
+        Simple percentage difference between current ROC and previous ROC.
+        """
+        # Smooth data with triple exponential moving average (TEMA)
+        # TEMA = 3(ema1) - 3(ema2) + ema3
+        self.data[f"rr_ema1_{period}"] = (
+            self.data[f"roc_{period}"].ewm(span=period, adjust=False).mean()
+        )
+        self.data[f"rr_ema2_{period}"] = (
+            self.data[f"rr_ema1_{period}"].ewm(
+                span=period, adjust=False).mean()
+        )
+        self.data[f"rr_ema3_{period}"] = (
+            self.data[f"rr_ema2_{period}"].ewm(
+                span=period, adjust=False).mean()
+        )
+        self.data[f"rr_tema_{period}"] = (
+            (3 * self.data[f"rr_ema1_{period}"])
+            - (3 * self.data[f"rr_ema2_{period}"])
+            + self.data[f"rr_ema3_{period}"]
         )
 
         # ROC = current_price - previous_price / previous_price
@@ -120,16 +152,53 @@ class Indicators:
             0,
         )
 
-        # Calculate DI (directional index) positive and negative
+        # Smooth pos_DMwith triple exponential moving average (TEMA)
+        # TEMA = 3(ema1) - 3(ema2) + ema3
+        self.data[f"posdm_ema1_{period}"] = (
+            self.data[f"pos_DM_{period}"].ewm(span=period, adjust=False).mean()
+        )
+        self.data[f"posdm_ema2_{period}"] = (
+            self.data[f"posdm_ema1_{period}"].ewm(
+                span=period, adjust=False).mean()
+        )
+        self.data[f"posdm_ema3_{period}"] = (
+            self.data[f"posdm_ema2_{period}"].ewm(
+                span=period, adjust=False).mean()
+        )
+        self.data[f"posdm_tema_{period}"] = (
+            (3 * self.data[f"posdm_ema1_{period}"])
+            - (3 * self.data[f"posdm_ema2_{period}"])
+            + self.data[f"posdm_ema3_{period}"]
+        )
         self.data[f"smooth_pos_DM_{period}"] = (
-            self.data[f"pos_DM_{period}"].rolling(window=period).mean()
+            self.data[f"posdm_tema_{period}"].pct_change(
+                periods=-(period)) * 100
         )
-        self.data[f"pos_DI_{period}"] = 100 * (
-            self.data[f"smooth_pos_DM_{period}"] / self.data[f"ATR_{period}"]
+        # Smooth neg_DM with triple exponential moving average (TEMA)
+        # TEMA = 3(ema1) - 3(ema2) + ema3
+        self.data[f"negdm_ema1_{period}"] = (
+            self.data[f"neg_DM_{period}"].ewm(span=period, adjust=False).mean()
         )
-
+        self.data[f"negdm_ema2_{period}"] = (
+            self.data[f"negdm_ema1_{period}"].ewm(
+                span=period, adjust=False).mean()
+        )
+        self.data[f"negdm_ema3_{period}"] = (
+            self.data[f"negdm_ema2_{period}"].ewm(
+                span=period, adjust=False).mean()
+        )
+        self.data[f"negdm_tema_{period}"] = (
+            (3 * self.data[f"negdm_ema1_{period}"])
+            - (3 * self.data[f"negdm_ema2_{period}"])
+            + self.data[f"negdm_ema3_{period}"]
+        )
         self.data[f"smooth_neg_DM_{period}"] = (
             self.data[f"neg_DM_{period}"].rolling(window=period).mean()
+        )
+
+        # Calculate DI (directional index) positive and negative
+        self.data[f"pos_DI_{period}"] = 100 * (
+            self.data[f"smooth_pos_DM_{period}"] / self.data[f"ATR_{period}"]
         )
         self.data[f"neg_DI_{period}"] = 100 * (
             self.data[f"smooth_neg_DM_{period}"] / self.data[f"ATR_{period}"]
@@ -138,13 +207,16 @@ class Indicators:
         # Calculate DX (directional index)
         self.data[f"DX_{period}"] = (
             100
-            * (abs(self.data[f"pos_DI_{period}"]) - abs(self.data[f"neg_DI_{period}"]))
-            / (abs(self.data[f"pos_DI_{period}"]) + abs(self.data[f"neg_DI_{period}"]))
+            * (abs(self.data[f"pos_DI_{period}"])
+                - abs(self.data[f"neg_DI_{period}"]))
+            / (abs(self.data[f"pos_DI_{period}"])
+                + abs(self.data[f"neg_DI_{period}"]))
         )
 
-        # ADX
-        self.data[f"ADX_{period}"] = self.data[f"DX_{period}"].rolling(
-            window=period).mean()
+        # Calculate ADX, average of DX over period
+        self.data[f"ADX_{period}"] = (
+            self.data[f"DX_{period}"].rolling(window=period).mean()
+        )
 
     def calculate_rsi(self, period):
         """
@@ -182,4 +254,5 @@ class Indicators:
         )
 
         # Relative Strength Index
-        self.data[f"RSI_{period}"] = 100 - (100 / (1 + self.data[f"RS_{period}"]))
+        self.data[f"RSI_{period}"] = 100 - \
+            (100 / (1 + self.data[f"RS_{period}"]))
