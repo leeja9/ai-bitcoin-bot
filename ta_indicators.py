@@ -73,7 +73,7 @@ class Indicators:
 
         # ROC = current_price - previous_price / previous_price
         self.data[f"ROC_{period}"] = (
-            self.data[f"roc_tema_{period}"].pct_change(periods=-(period)) * 100
+            self.data[f"roc_tema_{period}"].pct_change(periods=period) * 100
         )
 
     def calculate_rroc(self, period):
@@ -102,7 +102,7 @@ class Indicators:
 
         # ROC = current_price - previous_price / previous_price
         self.data[f"RROC_{period}"] = (
-            self.data[f"rr_tema_{period}"].pct_change(periods=-(period)) * 100
+            self.data[f"rr_tema_{period}"].pct_change(periods=period) * 100
         )
 
     def calculate_adx_atr(self, period):
