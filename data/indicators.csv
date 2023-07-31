@@ -1,4 +1,4 @@
-date,close,open,high,low,vol,ROC_2,ROC_4,ROC_6,ROC_8,ROC_16,ROC_32,ROC_64,RROC_2,RROC_4,RROC_6,RROC_8,RROC_16,RROC_32,RROC_64,ADX_2,ADX_4,ADX_6,ADX_8,ADX_16,ADX_32,ADX_64,RSI_2,RSI_4,RSI_6,RSI_8,RSI_16,RSI_32,RSI_64,ATR_2,ATR_4,ATR_6,ATR_8,ATR_16,ATR_32,ATR_64
+date,close,open,high,low,vol,feature_ROC_2,feature_ROC_4,feature_ROC_6,feature_ROC_8,feature_ROC_16,feature_ROC_32,feature_ROC_64,feature_RROC_2,feature_RROC_4,feature_RROC_6,feature_RROC_8,feature_RROC_16,feature_RROC_32,feature_RROC_64,feature_ADX_2,feature_ADX_4,feature_ADX_6,feature_ADX_8,feature_ADX_16,feature_ADX_32,feature_ADX_64,feature_RSI_2,feature_RSI_4,feature_RSI_6,feature_RSI_8,feature_RSI_16,feature_RSI_32,feature_RSI_64,feature_ATR_2,feature_ATR_4,feature_ATR_6,feature_ATR_8,feature_ATR_16,feature_ATR_32,feature_ATR_64
 2017-08-29,4587.5,4386.7,4625.9,4313.5,0.60K,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 2017-08-30,4555.1,4587.5,4647.5,4416.0,0.81K,,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,271.9499999999998,,,,,,
 2017-08-31,4724.9,4555.1,4745.4,4555.1,0.56K,2.8318498334847453,,,,,,,,,,,,,,100.0,,,,,,,45.645161290322605,,,,,,,210.89999999999964,,,,,,
