@@ -76,7 +76,8 @@ def get_random_weights(arr_len):
 def reward_function(history: History) -> float:
     """reward function for gym-trading-env"""
     update_reward_columns(history)
-    average_log_return = history['data_alr', -1]
+    
+    """average_log_return = history['data_alr', -1]
     var_sum = history['data_var_sum', -1]
     variance = var_sum / len(history)
     std_dev = np.sqrt(variance)
@@ -98,7 +99,9 @@ def reward_function(history: History) -> float:
     # dot product of random weights and reward values
     reward = reward_vector @ weight_vector
     return reward
-
+    """
+    return 0.1
+    
 
 def dynamic_features(history: History) -> float:
     """Calculates dynamic features."""
