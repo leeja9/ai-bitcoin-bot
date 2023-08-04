@@ -1,3 +1,4 @@
+# %%
 import gym
 
 from stable_baselines3.common.env_util import make_vec_env
@@ -22,6 +23,9 @@ from gym_trading_env.downloader import download
 import datetime
 
 
+
+
+# %%
 def add_reward_columns(df: pd.DataFrame):
     """add reward columns to dataframe for incremental updates"""
     for col in ['lr', 'alr', 'var_sum']:
@@ -80,7 +84,7 @@ def reward_function(history: History) -> float:
     var_sum = history['data_var_sum', -1]
     variance = var_sum / len(history)
     std_dev = np.sqrt(variance)
-    sharpe_ratio = average_log_return / std_dev
+    sharpe_ratio = average_log_return / 0.5
     this_lr = history['data_lr', -1]
     powc = 0
     # if this eposide position is 0 (100% USD) and last position was 1 (100% BTC)
@@ -107,7 +111,7 @@ def dynamic_features(history: History) -> float:
 
     pass
 
-
+# %%
 # load data
 df = pd.read_csv("./data/indicators.csv")
 df.dropna(inplace=True)
@@ -115,16 +119,20 @@ df.dropna(inplace=True)
 add_reward_columns(df)
 
 env = gym.make("TradingEnv",
-               name="BTCUSD",
-               df=df,
-               positions=[0, 1],
-               # trading_fees = 0.01/100, # 0.01% per stock buy / sell (Binance fees)
-               # borrow_interest_rate= 0.0003/100, # 0.0003% per timestep (one timestep = 1h here)
-               # dynamic_feature_functions = [dynamic_features]
-               reward_function=reward_function,
-               portfolio_initial_value=10000,
-               max_episode_duration=1000,)
+                     name="BTCUSD",
+                     df=df, 
+                     positions=[0, 1],
+                     # trading_fees = 0.01/100, # 0.01% per stock buy / sell (Binance fees)
+                     # borrow_interest_rate= 0.0003/100, # 0.0003% per timestep (one timestep = 1h here)
+                     # dynamic_feature_functions = [dynamic_features]
+                     reward_function=reward_function,
+                     portfolio_initial_value=10000,
+                     max_episode_duration = 1000,
+                     )
 
+
+
+# %%
 model = PPO("MlpPolicy", env, 
             verbose=0,
             gamma=0.95, 
@@ -137,9 +145,12 @@ model = PPO("MlpPolicy", env,
 
 model.learn(total_timesteps=1)
 
+# %%
 obs = env.reset()
 
 while True:
     action, _states = model.predict(obs)
     obs, rewards, done, info = env.step(action)
     env.render()
+
+
