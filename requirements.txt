@@ -1,5 +1,3 @@
-# required python packages
-# install with cli command: pip install -r requirements.txt
 pandas
 numpy
 gymnasium
