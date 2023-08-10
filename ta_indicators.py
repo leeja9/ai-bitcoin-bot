@@ -7,7 +7,8 @@ class Indicators:
     state from csv data.  Writes to new columns."""
 
     def __init__(self, csv_file):
-        self.data = pd.read_csv(csv_file, index_col="date", parse_dates=True)
+        self.data = pd.read_csv(
+            csv_file, index_col="date_open", parse_dates=True)
 
         self.lookback_periods = [2, 4, 6, 8, 16, 32, 64]
 
@@ -24,7 +25,7 @@ class Indicators:
         self.data.to_csv("./data/dataset_calculation_columns.csv")
 
         # Only write results to output csv.
-        indicators = ["close", "open", "high", "low", "vol"]
+        indicators = ["close", "open", "high", "low", "volume"]
         labels = ["feature_ROC_", "feature_RROC_",
                   "feature_ADX_", "feature_RSI_", "feature_ATR_"]
         for label in labels:
@@ -32,7 +33,13 @@ class Indicators:
                 indicator = label + str(period)
                 indicators.append(indicator)
 
-        self.data[indicators].to_csv("./data/indicators.csv")
+        self.data.dropna(inplace=True)
+        self.data[indicators].to_csv(csv_file)
+        self.indicators = self.data[indicators]
+
+    def to_pickle(self, pkl_name):
+        self.indicators.dropna(inplace=True)
+        self.indicators.to_pickle(pkl_name)
 
     def check_date(self):
         if not self.data.index.is_monotonic_increasing:
@@ -85,7 +92,8 @@ class Indicators:
         # Smooth data with triple exponential moving average (TEMA)
         # TEMA = 3(ema1) - 3(ema2) + ema3
         self.data[f"rr_ema1_{period}"] = (
-            self.data[f"feature_ROC_{period}"].ewm(span=period, adjust=False).mean()
+            self.data[f"feature_ROC_{period}"].ewm(
+                span=period, adjust=False).mean()
         )
         self.data[f"rr_ema2_{period}"] = (
             self.data[f"rr_ema1_{period}"].ewm(
@@ -199,10 +207,12 @@ class Indicators:
 
         # Calculate DI (directional index) positive and negative
         self.data[f"pos_DI_{period}"] = 100 * (
-            self.data[f"smooth_pos_DM_{period}"] / self.data[f"feature_ATR_{period}"]
+            self.data[f"smooth_pos_DM_{period}"] /
+            self.data[f"feature_ATR_{period}"]
         )
         self.data[f"neg_DI_{period}"] = 100 * (
-            self.data[f"smooth_neg_DM_{period}"] / self.data[f"feature_ATR_{period}"]
+            self.data[f"smooth_neg_DM_{period}"] /
+            self.data[f"feature_ATR_{period}"]
         )
 
         # Calculate DX (directional index)

@@ -4,6 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 /fire-master
+/render_logs
 
 # User-specific files
 *.rsuser
