@@ -21,10 +21,10 @@ def reward_function(history: History, win_size: int = 144) -> float:
     log_return = log_return.fillna(0)
     average_log_return = log_return.mean()
     std_dev = log_return.std()
-    risk_free_rate = 0.025  # 2.5%
-    sharpe_ratio = (average_log_return - risk_free_rate) / std_dev
+    # risk_free_rate = 0.025  # 2.5%
+    sharpe_ratio = (average_log_return) / std_dev
     positions = pd.Series(history['position'][-win_size:])
     powc = log_return.mask(positions == 0, 0).mean()  # profit only when closed
-    reward_vector = np.array([average_log_return, sharpe_ratio, powc])
+    reward_vector = np.array([powc, average_log_return, sharpe_ratio])
     # the weights of a weighted average could be another parameter to optimize
     return reward_vector.mean()
