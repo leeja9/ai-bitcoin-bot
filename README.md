@@ -35,11 +35,11 @@ Oregon State University
 
 # System Design
 
-![system_design_ideas_v2](https://github.com/leeja9/ai-bitcoin-bot/assets/122495104/e31c0def-02c0-4219-87e1-fed2ad8de5d2)
+![system_design_ideas_v2](https://github.com/leeja9/ai-bitcoin-bot/assets/122495104/3a6c0c6b-deba-484a-aa1d-0b29f15164d1)
 
 # Presentation Video
 
-https://github.com/leeja9/ai-bitcoin-bot/assets/122495104/7ad3b4c6-2abc-4378-a2b6-9f703d03e742
+https://github.com/leeja9/ai-bitcoin-bot/assets/122495104/c4f827b8-c86f-4e14-ac1b-8b19fea20b32
 
 # Detailed File Descriptions
 - `data/`
