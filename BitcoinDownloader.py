@@ -1,8 +1,10 @@
+import gym_trading_env
 from gym_trading_env.downloader import download
 from datetime import datetime
 from ccxt.base.errors import ExchangeNotAvailable
 from pathlib import Path
 import pandas as pd
+import os
 
 
 def download_exchange_data(since: datetime = datetime.fromisoformat("2017-01-01"),
@@ -89,8 +91,12 @@ def get_dataframes(data_path: str = './data/binance-BTCUSDT-1h.pkl') -> tuple[pd
     return training_dataframe, testing_dataframe
 
 
-if __name__ == "__main__":
-    # download_exchange_data()
-    trainingdf, testingdf = get_dataframes()
-    print(trainingdf.tail())
-    print(testingdf.head())
+if __name__ == "__main__)":
+    data_dir = './data/'
+    curr_time = datetime.isoformat(datetime.today()).split(".")[0].replace(":", "-")
+    data_name = f'binance-BTCUSDT-1h-{curr_time}.pkl'
+    data_path = data_dir + data_name
+    os.makedirs(data_dir, exist_ok=True)
+    download_exchange_data()
+    df = pd.read_pickle(data_name)
+    df.to_csv(data_dir + data_name.split(".")[0] + ".csv")

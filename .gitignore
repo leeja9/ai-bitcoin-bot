@@ -406,3 +406,6 @@ venv*/
 data
 .data
 *logs/
+
+# Ignore saved models folder
+saved_models/

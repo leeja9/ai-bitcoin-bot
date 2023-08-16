@@ -13,18 +13,31 @@ def reward_function(history: History, win_size: int = 144) -> float:
     Returns:
         float: Average of alr, sr, powc
     """
-    # n_history = len(history['data_close'])
-    # if  > n_history:
-    #     win_size = -n_history
-    data_close = pd.Series(history['data_close'][-win_size:])
-    log_return = data_close.apply(lambda x: np.log(x)).pct_change()
-    log_return = log_return.fillna(0)
-    average_log_return = log_return.mean()
-    std_dev = log_return.std()
-    risk_free_rate = 0.025  # 2.5%
-    sharpe_ratio = (average_log_return - risk_free_rate) / std_dev
-    positions = pd.Series(history['position'][-win_size:])
-    powc = log_return.mask(positions == 0, 0).mean()  # profit only when closed
-    reward_vector = np.array([average_log_return, sharpe_ratio, powc])
+    # calculate log_returns for rolling window
+    data_close = np.array(history['data_close'][-win_size:], dtype=np.float64)
+    pos = np.array(history['position'][-win_size:], dtype=np.float64)
+    log_data = np.log(data_close)
+    log_return = np.where(pos[1:] == 1, np.diff(log_data), 0)
+    if len(log_return) > 0:
+        # average log return
+        alr = log_return.mean()
+        # sharpe ratio
+        sr = 0 if log_return.std() == 0 else alr / log_return.std()
+    else:
+        alr = 0
+        sr = 0
+    # profit only when closed
+    buy_pos = np.where(np.diff(pos) > 0)[0]
+    sell_pos = np.where(np.diff(pos) < 0)[0]
+    if len(buy_pos) == 0 or len(sell_pos) == 0:
+        powc = 0
+    else:
+        if sell_pos[0] < buy_pos[0]:
+            sell_pos = sell_pos[1:]
+        log_profits = np.zeros(len(sell_pos))
+        for i, b, s in zip(range(len(sell_pos)), buy_pos, sell_pos):
+            log_profits[i] = log_return[s] - log_return[b]
+        powc = log_profits.mean()
+    reward_vector = np.array([alr, sr, powc])
     # the weights of a weighted average could be another parameter to optimize
     return reward_vector.mean()
